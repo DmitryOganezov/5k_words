@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>5k Words Teleprompter</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="googlebot" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  
+  <style id="compiled-css" type="text/css">
+
+html,body{
+	height: 100%;      
+	min-height: 100%;  
+	padding:0;
+	margin: 0;
+}
+
+#holder {
+	min-height: 100%;  
+	position:relative;
+/*	background: #eeeeee;*/
+	padding:0;
+	margin: 0;
+}
+
+.label {
+	color: #4c4c4c;
+	font-size: 24px;
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+#controls_bottom{
+	position: absolute;
+	height: 96px;
+	width: 100%;
+	left: 50%;
+	margin-right: -50%;
+	bottom: 3%;
+	transform: translate(-50%, 0);
+}
+    
+#controls_top{
+	position: absolute;
+	height: 96px;
+	width: 100%;
+	left: 50%;
+	margin-right: -50%;
+	top: 3%;
+	transform: translate(-50%, 0);
+}
+
+#controls_progress{
+	background: grey;
+	height: 120px;
+	margin: 0;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin-right: -50%;
+	transform: translate(-50%, -50%);
+}
+    
+
+h1.word_container {
+	color: #4c4c4c;
+	font-size: 90px;
+	/* font-size: 10vw;*/
+	font-family: Arial, Helvetica, sans-serif;
+	margin: 0;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin-right: -50%;
+	transform: translate(-50%, -50%);
+}
+
+h2.id_container {
+	color: #aaaaaa;
+	font-size: 48px;
+	font-family: Arial, Helvetica, sans-serif;
+	margin: 0;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin-right: -50%;
+	transform: translate(-50%, -50%);
+}
+
+h2.ipa_container {
+	color: #ff9933;
+	font-size: 48px;
+	font-family: Arial, Helvetica, sans-serif;
+	margin: 0;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin-right: -50%;
+	transform: translate(-50%, -50%);
+}
+
+progress {
+  border: none;
+  height: 100%; 
+  width: 100%;
+  background: #eeeeee;
+}
+
+progress {
+  color: #b9dbff;
+}
+
+progress::-webkit-progress-value {
+  background: #96c8a2;       /* #b9dbff */
+}
+
+progress::-moz-progress-bar {
+  background: #eeeeee;
+}
+
+progress::-webkit-progress-value {
+  background: #96c8a2;       /* #b9dbff */
+}
+
+progress::-webkit-progress-bar {
+  background: #eeeeee;
+}
+        
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;  /* Preferred icon size */
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  color: white;
+
+  /* Support for all WebKit browsers. */
+  -webkit-font-smoothing: antialiased;
+  /* Support for Safari and Chrome. */
+  text-rendering: optimizeLegibility;
+
+  /* Support for Firefox. */
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Support for IE. */
+  font-feature-settings: 'liga';
+}
+
+.material-icons.md-18 { font-size: 18px; }
+.material-icons.md-24 { font-size: 24px; }
+.material-icons.md-36 { font-size: 36px; }
+.material-icons.md-48 { font-size: 48px; }
+.material-icons.md-64 { font-size: 64px; }
+
+.btn {
+  background-color: darkorange; /* DodgerBlue - Blue background */
+  border: none; /* Remove borders */
+  color: white; /* White text */
+  padding: 12px 16px; /* Some padding */
+  font-size: 16px; /* Set a font size */
+  cursor: pointer; /* Mouse pointer on hover */
+  margin: 16px;
+}
+
+/* Darker background on mouse-over */
+.btn:hover {
+  background-color: orange; /* RoyalBlue - Blue background */
+}
+
+.styled select {
+  background: transparent;
+  border: 1px solid DodgerBlue;
+  height: 44px;
+}
+
+.styled {
+  height: 44px;
+  font-size: 18px;
+  border: 1px solid DodgerBlue;
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 16px;
+  /* background: url(http://www.icons.com/some.ico) 96% / 20% no-repeat #EEE; */
+}
+
+
+</style>
+
+</head>
+
+<body>
+    
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+      
+<div id="holder">      
+
+  <div id="controls_progress" style=" width: 100%; display: none;">
+   <progress id="progress_bar" max="100" value="0"></progress>
+  </div>
+
+  <h1 class=word_container id="word_spelling">loading...</h1>
+  <h2 class=id_container id="word_id" style="margin-top: 96px;"></h2>
+  <h2 class=ipa_container id="word_ipa" style="padding-bottom: 192px;"></h2>
+
+  <div id="controls_top" style="display: none;">
+    <select id="baskets" onchange="basketChange(this)" style="width:170px;" class="styled">
+      <!-- options added dinamically; see fillBaskets()
+      <option value=0>words 001-200</option>  -->
+    </select>
+    <select id="interval" onchange="intervalChange(this)" style="width:170px;" class="styled">
+      <option value=30>interval 3.0 sec</option>
+      <option value=35 selected>interval 3.5 sec</option>
+      <option value=40>interval 4.0 sec</option>
+      <option value=45>interval 4.5 sec</option>
+      <option value=50>interval 5.0 sec</option>
+    </select>
+  </div>
+
+  <div id="controls_bottom" style="display: none;">
+    <button class="btn" onclick="back()"    id="b_back">    <i class="material-icons md-48">arrow_back</i></button>
+    <button class="btn" onclick="pause()"   id="b_pause">   <i class="material-icons md-48">pause_circle_filled</i></button>
+    <button class="btn" onclick="play()"    id="b_play">    <i class="material-icons md-48">play_circle_outline</i></button>
+    <button class="btn" onclick="forward()" id="b_forward"> <i class="material-icons md-48">arrow_forward</i></button>
+  </div>
+      
+</div>
+
+
+<script type="text/javascript">//<![CDATA[
+
+// var spreadsheetUrl = 'words.json';
+
+var jsonObj; // json object
+var basket = 0;
+var basketSize = 200;
+var position = 0;
+var updateInterval = 3000;
+var autoUpdateFlag;
+var progressUpdateTimes = 100;
+var progressUpdateFlag;
+var timer;
+
+
+$(document).ready(function(){
+
+    loadWords();   
+    initializeUI();
+
+});
+
+function loadWords() {
+
+    jsonObj = JSON.parse(document.getElementById('words').innerHTML);
+    position=0;    
+    console.log( "loadWords() words loaded: " + jsonObj.words.length); 
+}
+
+function initializeUI() {
+
+    // console.log("initialize() " + wordsArray.length);
+    setWord();
+    fillBaskets();
+    $("#b_pause").hide();
+    $("#b_play").show(); 
+    $("#controls_top").show();
+    $("#controls_bottom").show();
+    $("#controls_progress").show();
+}
+
+function play() {
+    
+    timer = (new Date).getTime();
+
+    autoUpdateFlag = setInterval(autoUpdate, updateInterval); 
+
+    startProgressUpdate();
+
+    $("#b_pause").show();
+    $("#b_play").hide();  
+
+}
+
+function pause() {
+
+    stopProgressUpdate();
+    clearInterval(autoUpdateFlag);
+    $("#b_pause").hide();
+    $("#b_play").show();
+}
+
+function autoUpdate() {
+
+  timer = (new Date).getTime();
+
+  if ( position < basketSize*(basket+1)-1 ) {
+   
+   ++position;
+    setWord();
+
+  } else {
+  
+    pause();
+  }
+}
+
+function forward() {
+
+    pause();
+    
+    if ( position < basketSize*(basket+1)-1 && position < jsonObj.words.length-1 ) {
+    	++position;
+    	setWord();
+    }
+}
+
+function back() {
+
+    pause();
+    
+    if ( position > basketSize*basket ) {
+    	--position;
+    	setWord();
+    }
+}
+
+function setWord() {
+
+    var spelling = jsonObj.words[position].w;
+    var ipa = jsonObj.words[position].i;
+
+    // change font size to fit long words
+    
+    if (spelling.length > 8 ) {
+
+      $('#word_spelling').css({"font-size":"60px"})
+
+    } else {
+
+      $('#word_spelling').css({"font-size":"80px"})
+    }    
+    
+    $("#word_spelling").text(spelling);
+    $("#word_id").text("#" + (position+1));
+    $("#word_ipa").text(ipa);
+}
+
+
+function basketChange(selectBasket) {
+
+    pause();
+    basket = parseInt(selectBasket.options[selectBasket.selectedIndex].value);
+    position = basketSize * basket;
+
+    setWord();
+}
+
+function intervalChange(selectInterval) {
+
+    pause();
+    updateInterval = parseInt(selectInterval.options[selectInterval.selectedIndex].value)*100;
+    setWord();
+}
+
+function startProgressUpdate() {
+
+    progressUpdateFlag = setInterval(setProgress, updateInterval/progressUpdateTimes); 
+}
+
+function stopProgressUpdate() {
+
+    clearInterval(progressUpdateFlag);
+    $("#progress_bar").val(0);
+}
+
+function setProgress() {
+
+    $("#progress_bar").val( Math.round(((new Date).getTime()-timer)/updateInterval*100) );
+}
+
+function fillBaskets() {
+
+   var optionsCount = Math.floor(jsonObj.words.length/basketSize);
+   if ( jsonObj.words.length > optionsCount*basketSize ) ++optionsCount;
+
+   for(var i=0; i<optionsCount; ++i) {
+
+     var option  = document.createElement("option");
+     var cntFrom = i*basketSize+1;
+     var cntTo   = (i+1)*basketSize;
+     if ( cntTo > jsonObj.words.length ) cntTo = jsonObj.words.length;
+
+     option.text = "RR" + pad(i+1,2) + ": " + pad(cntFrom,4) + "-" + pad(cntTo,4);
+     option.value = i;
+     $("#baskets").append(option);
+   }
+}
+
+function pad(num, size) {
+    var s = "0000" + num;
+    return s.substr(s.length-size);
+}
+
+//]]></script>
+
+<script type="application/json" id="words">   
+{"words":[
+{"w":"look","i":""},
+{"w":"sees","i":""},
+{"w":"take","i":""},
+{"w":"means","i":""},
+{"w":"work","i":""},
+{"w":"people's","i":""},
+{"w":"book","i":""},
+{"w":"street","i":""},
+{"w":"landed","i":""},
+{"w":"recorded","i":""},
+{"w":"screamed","i":""},
+{"w":"perfect","i":"pɚˈfɛkt"},
+{"w":"continued","i":""},
+{"w":"kisses","i":""},
+{"w":"sick","i":""},
+{"w":"jack","i":""},
+{"w":"raise","i":""},
+{"w":"angry","i":""},
+{"w":"suited","i":""},
+{"w":"cashed","i":""},
+{"w":"stage","i":""},
+{"w":"existed","i":""},
+{"w":"reminded","i":""},
+{"w":"aunt","i":""},
+{"w":"usually","i":""},
+{"w":"grand","i":""},
+{"w":"double","i":""},
+{"w":"copy","i":""},
+{"w":"buck","i":""},
+{"w":"strike","i":""},
+{"w":"fake","i":""},
+{"w":"artist","i":""},
+{"w":"confuse","i":""},
+{"w":"tips","i":""},
+{"w":"weight","i":""},
+{"w":"coat","i":""},
+{"w":"statement","i":""},
+{"w":"clock","i":""},
+{"w":"o'clock","i":""},
+{"w":"giant","i":""},
+{"w":"stomach","i":""},
+{"w":"develop","i":""},
+{"w":"complicate","i":""},
+{"w":"bleep","i":""},
+{"w":"gunshot","i":""},
+{"w":"effort","i":""},
+{"w":"chip","i":""},
+{"w":"talent","i":""},
+{"w":"investigate","i":""},
+{"w":"airport","i":""},
+{"w":"matt","i":""},
+{"w":"chocolate","i":""},
+{"w":"expert","i":""},
+{"w":"Europe","i":""},
+{"w":"snake","i":""},
+{"w":"traffic","i":""},
+{"w":"chick","i":""},
+{"w":"represent","i":""},
+{"w":"tank","i":""},
+{"w":"gut","i":""},
+{"w":"greet","i":""},
+{"w":"appointment","i":""},
+{"w":"iron","i":""},
+{"w":"downstairs","i":""},
+{"w":"magazine","i":"ˈmæɡ·əˌzin"},
+{"w":"loser","i":""},
+{"w":"wipe","i":""},
+{"w":"boot","i":""},
+{"w":"fry","i":""},
+{"w":"defeat","i":""},
+{"w":"debt","i":""},
+{"w":"adult","i":""},
+{"w":"strip","i":""},
+{"w":"treatment","i":""},
+{"w":"fought","i":""},
+{"w":"nerve","i":""},
+{"w":"duck","i":""},
+{"w":"movement","i":""},
+{"w":"panic","i":""},
+{"w":"attend","i":""},
+{"w":"soup","i":""},
+{"w":"document","i":""},
+{"w":"rope","i":""},
+{"w":"experiment","i":""},
+{"w":"fruit","i":""},
+{"w":"chat","i":""},
+{"w":"sat","i":""},
+{"w":"servant","i":""},
+{"w":"chose","i":"tʃoʊz"},
+{"w":"pot","i":""},
+{"w":"awake","i":""},
+{"w":"route","i":""},
+{"w":"midnight","i":""},
+{"w":"friendship","i":""},
+{"w":"insult","i":"ˈɪn·səlt"},
+{"w":"insult","i":"ɪnˈsʌlt"},
+{"w":"guide","i":""},
+{"w":"port","i":""},
+{"w":"troop","i":""},
+{"w":"assault","i":""},
+{"w":"progress","i":"ˈprɑɡ·rɛs"},
+{"w":"progress","i":"prəˈɡrɛs"},
+{"w":"saint","i":""},
+{"w":"sweat","i":""},
+{"w":"warrant","i":""},
+{"w":"culture","i":""},
+{"w":"dramatic","i":""},
+{"w":"desperate","i":""},
+{"w":"bat","i":""},
+{"w":"false","i":"fɔls"},
+{"w":"silent","i":""},
+{"w":"intelligence","i":"ɪnˈtɛl·ɪ·dʒəns"},
+{"w":"woke","i":""},
+{"w":"sand","i":""},
+{"w":"tiger","i":""},
+{"w":"belt","i":""},
+{"w":"benefit","i":""},
+{"w":"chop","i":""},
+{"w":"ton","i":""},
+{"w":"sharp","i":""},
+{"w":"internet","i":""},
+{"w":"skip","i":""},
+{"w":"propose","i":""},
+{"w":"terrorist","i":""},
+{"w":"negative","i":""},
+{"w":"comfort","i":""},
+{"w":"current","i":""},
+{"w":"flag","i":""},
+{"w":"thy","i":""},
+{"w":"estate","i":""},
+{"w":"fulfill","i":"fʊlˈfɪl"},
+{"w":"pattern","i":"ˈpæt̬·ɚn"},
+{"w":"root","i":""},
+{"w":"sometime","i":""},
+{"w":"comment","i":""},
+{"w":"despite","i":""},
+{"w":"pet","i":""},
+{"w":"ally","i":"æl·aɪ"},
+{"w":"deck","i":""},
+{"w":"graduate","i":""},
+{"w":"dirt","i":""},
+{"w":"whip","i":""},
+{"w":"outfit","i":""},
+{"w":"transport","i":"ˈtræns·pɔrt"},
+{"w":"transport","i":"trænsˈpɔrt"},
+{"w":"delight","i":""},
+{"w":"thick","i":""},
+{"w":"choke","i":""},
+{"w":"plot","i":""},
+{"w":"territory","i":""},
+{"w":"advise","i":""},
+{"w":"hip","i":""},
+{"w":"practically","i":""},
+{"w":"brick","i":""},
+{"w":"hack","i":""},
+{"w":"mount","i":""},
+{"w":"tick","i":""},
+{"w":"pirate","i":""},
+{"w":"scout","i":""},
+{"w":"compromise","i":""},
+{"w":"creep","i":""},
+{"w":"slight","i":""},
+{"w":"guilt","i":""},
+{"w":"humiliate","i":""},
+{"w":"lap","i":""},
+{"w":"compliment","i":""},
+{"w":"blanket","i":""},
+{"w":"drank","i":""},
+{"w":"net","i":""},
+{"w":"tent","i":""},
+{"w":"prick","i":""},
+{"w":"unlike","i":""},
+{"w":"steak","i":""},
+{"w":"await","i":""},
+{"w":"misunderstand","i":""},
+{"w":"pope","i":""},
+{"w":"eliminate","i":""},
+{"w":"development","i":""},
+{"w":"chant","i":""},
+{"w":"assignment","i":""},
+{"w":"merely","i":"ˈmɪr·li"},
+{"w":"chirp","i":""},
+{"w":"satellite","i":""},
+{"w":"deposit","i":""},
+{"w":"intelligent","i":""},
+{"w":"lick","i":""},
+{"w":"engagement","i":""},
+{"w":"beam","i":""},
+{"w":"burger","i":""},
+{"w":"whirr","i":""},
+{"w":"bounce","i":""},
+{"w":"blackmail","i":""},
+{"w":"whale","i":""},
+{"w":"resource","i":""},
+{"w":"noon","i":""},
+{"w":"diet","i":""},
+{"w":"dock","i":""},
+{"w":"bucket","i":""},
+{"w":"quote","i":""},
+{"w":"compete","i":""},
+{"w":"absolute","i":""},
+{"w":"coke","i":""},
+{"w":"soviet","i":""},
+{"w":"communicate","i":""},
+{"w":"instrument","i":""},
+{"w":"fort","i":""},
+{"w":"fleet","i":""},
+{"w":"sweep","i":""},
+{"w":"remote","i":""},
+{"w":"soap","i":""},
+{"w":"snack","i":""},
+{"w":"dessert","i":""},
+{"w":"whoop","i":""},
+{"w":"electronic","i":""},
+{"w":"retreat","i":""},
+{"w":"creak","i":""},
+{"w":"cheek","i":""},
+{"w":"investment","i":""},
+{"w":"rot","i":""},
+{"w":"frog","i":""},
+{"w":"entry","i":""},
+{"w":"pillow","i":""},
+{"w":"helpful","i":""},
+{"w":"lit","i":""},
+{"w":"dedicate","i":""},
+{"w":"bout","i":""},
+{"w":"negotiate","i":""},
+{"w":"oppose","i":""},
+{"w":"spike","i":""},
+{"w":"dope","i":""},
+{"w":"crook","i":""},
+{"w":"vital","i":""},
+{"w":"appropriate","i":""},
+{"w":"roommate","i":""},
+{"w":"burnt","i":""},
+{"w":"cycle","i":""},
+{"w":"poet","i":""},
+{"w":"peanut","i":""},
+{"w":"ultimate","i":""},
+{"w":"pork","i":""},
+{"w":"skirt","i":""},
+{"w":"flirt","i":""},
+{"w":"unfortunate","i":""},
+{"w":"tease","i":""},
+{"w":"clap","i":""},
+{"w":"halt","i":""},
+{"w":"activate","i":""},
+{"w":"chart","i":""},
+{"w":"delicate","i":""},
+{"w":"bait","i":""},
+{"w":"certificate","i":""},
+{"w":"permanent","i":""},
+{"w":"dammit","i":""},
+{"w":"consult","i":"kənˈsʌlt"},
+{"w":"polite","i":""},
+{"w":"mob","i":""},
+{"w":"orbit","i":""},
+{"w":"cricket","i":""},
+{"w":"riot","i":""},
+{"w":"liquid","i":""},
+{"w":"leap","i":""},
+{"w":"dip","i":""},
+{"w":"overnight","i":""},
+{"w":"bolt","i":""},
+{"w":"brat","i":""},
+{"w":"poke","i":""},
+{"w":"imitate","i":"ˈɪm·ɪˌteɪt"},
+{"w":"advertise","i":""},
+{"w":"inherit","i":""},
+{"w":"skate","i":""},
+{"w":"hopeless","i":""},
+{"w":"hesitate","i":""},
+{"w":"appetite","i":""},
+{"w":"bracelet","i":""},
+{"w":"picnic","i":""},
+{"w":"storage","i":""},
+{"w":"corporate","i":""},
+{"w":"estimate","i":""},
+{"w":"sunset","i":""},
+{"w":"website","i":""},
+{"w":"violate","i":""},
+{"w":"resort","i":""},
+{"w":"puppet","i":""},
+{"w":"reed","i":""},
+{"w":"manipulate","i":""},
+{"w":"appoint","i":""},
+{"w":"whack","i":""},
+{"w":"daylight","i":""},
+{"w":"somewhat","i":""},
+{"w":"tournament","i":""},
+{"w":"evacuate","i":""},
+{"w":"cope","i":""},
+{"w":"fork","i":""},
+{"w":"landscape","i":""},
+{"w":"concrete","i":""},
+{"w":"physic","i":""},
+{"w":"ingredient","i":""},
+{"w":"underestimate","i":""},
+{"w":"drip","i":""},
+{"w":"shriek","i":""},
+{"w":"biscuit","i":""},
+{"w":"static","i":""},
+{"w":"climate","i":""},
+{"w":"volcano","i":""},
+{"w":"spite","i":""},
+{"w":"maniac","i":"ˈmeɪ·niˌæk"},
+{"w":"swap","i":""},
+{"w":"firework","i":""},
+{"w":"fireworks","i":""},
+{"w":"exploit","i":""},
+{"w":"prank","i":""},
+{"w":"delete","i":""},
+{"w":"logic","i":""},
+{"w":"puke","i":""},
+{"w":"cape","i":""},
+{"w":"scholarship","i":""},
+{"w":"athlete","i":""},
+{"w":"creek","i":""},
+{"w":"replacement","i":""},
+{"w":"mortgage","i":""},
+{"w":"stark","i":""},
+{"w":"provoke","i":""},
+{"w":"snort","i":""},
+{"w":"conclude","i":""},
+{"w":"upbeat","i":""},
+{"w":"notebook","i":""},
+{"w":"pursuit","i":""},
+{"w":"tab","i":""},
+{"w":"evolution","i":""},
+{"w":"unpleasant","i":""},
+{"w":"needn't","i":""},
+{"w":"cult","i":""},
+{"w":"parliament","i":""},
+{"w":"rehab","i":""},
+{"w":"elite","i":""},
+{"w":"prop","i":""},
+{"w":"yacht","i":""},
+{"w":"cramp","i":""},
+{"w":"crate","i":""},
+{"w":"loot","i":""},
+{"w":"sought","i":""},
+{"w":"artistic","i":""},
+{"w":"pluck","i":""},
+{"w":"slit","i":""},
+{"w":"stoke","i":""},
+{"w":"flute","i":""},
+{"w":"fright","i":""},
+{"w":"rewrite","i":""},
+{"w":"muck","i":""},
+{"w":"brink","i":""},
+{"w":"reek","i":""},
+{"w":"croak","i":""},
+{"w":"maggot","i":""},
+{"w":"dunk","i":""},
+{"w":"craze","i":""},
+{"w":"indict","i":""},
+{"w":"yak","i":""},
+{"w":"luxurious","i":""},
+{"w":"mitt","i":""},
+{"w":"naught","i":""},
+{"w":"pterodactyl","i":"ˌtɛr·əˈdæk·təl"},
+{"w":"quay","i":"ki"},
+{"w":"schnorkel","i":"ˈʃnɔr·kl̩"}
+]}
+</script>
+
+</body>
+</html>
